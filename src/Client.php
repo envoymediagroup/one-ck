@@ -223,7 +223,10 @@ class Client
     private function readHeader()
     {
         $n = $this->read->number();
-        if ($n > 1) {
+        // $n is the temp-table-name length (0 for normal results). A value of 1 here is the
+        // SERVER_DATA packet code of a *following* block whose code receive() did not consume;
+        // treat any code >= 1 as "next packet" so multi-block responses stay byte-aligned.
+        if ($n >= 1) {
             return [$n, 0];
         }
         $info = [
