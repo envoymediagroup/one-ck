@@ -258,9 +258,17 @@ class Client
     }
 
 
-    private function sendQuery($sql)
+    /**
+     * @param string $sql
+     * @param string $query_id Sent as the query's id; empty lets the server generate one.
+     * @param array<string, string> $string_settings Per-query settings. This client speaks protocol
+     *        revision 54213, below the one that serializes settings as strings, so the server reads
+     *        each value in its setting's binary form: only String-typed settings such as
+     *        `log_comment` may be passed.
+     */
+    private function sendQuery($sql, $query_id = '', array $string_settings = [])
     {
-        $this->write->number(Protocol::CLIENT_QUERY, 0);
+        $this->write->number(Protocol::CLIENT_QUERY)->string($query_id);
 
         if ($this->gtV(self::DBMS_MIN_V_CLIENT_INFO)) {
 
@@ -279,17 +287,24 @@ class Client
 
         }
 
-        $this->write->number(0, Protocol::STAGES_COMPLETE, Protocol::COMPRESSION_DISABLE)->string($sql);
+        foreach ($string_settings as $name => $value) {
+            $this->write->string((string)$name, (string)$value);
+        }
+
+        // An empty setting name ends the settings list.
+        $this->write->string('')->number(Protocol::STAGES_COMPLETE, Protocol::COMPRESSION_DISABLE)->string($sql);
 
     }
 
     /**
      * @param string $sql
+     * @param string $query_id Sent as the query's id; empty lets the server generate one.
+     * @param array<string, string> $string_settings String-typed per-query settings, such as `log_comment`.
      */
-    public function query($sql)
+    public function query($sql, $query_id = '', array $string_settings = [])
     {
         $this->fields = [];
-        $this->sendQuery($sql);
+        $this->sendQuery($sql, $query_id, $string_settings);
         return $this->writeEnd();
     }
 
