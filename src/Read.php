@@ -18,6 +18,9 @@ class Read
     {
         $buffer = fread($this->conn, $n);
         if ($buffer === false || !isset($buffer[0])) {
+            if (stream_get_meta_data($this->conn)['timed_out']) {
+                throw new CkException('read timed out', CkException::CODE_READ_TIMEOUT);
+            }
             throw new CkException('read from fail', CkException::CODE_READ_FAIL);
         }
         if (strlen($buffer) < $n) {
