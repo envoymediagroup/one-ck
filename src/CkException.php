@@ -15,4 +15,7 @@ class CkException extends \Exception
     const CODE_RECEIVE_NULL       = 10009;
 
     const CODE_ARR_ERR = 10010;
+
+    /** A read got nothing because the stream timed out (socket_timeout), not because the connection closed. */
+    const CODE_READ_TIMEOUT = 10011;
 }
